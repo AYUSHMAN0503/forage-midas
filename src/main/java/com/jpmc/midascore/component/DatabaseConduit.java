@@ -2,66 +2,66 @@ package com.jpmc.midascore.component;
 
 import com.jpmc.midascore.entity.TransactionRecord;
 import com.jpmc.midascore.entity.UserRecord;
-import com.jpmc.midascore.repository.TransactionRepository;
+import com.jpmc.midascore.foundation.Transaction;
+import com.jpmc.midascore.repository.TransactionRecordRepository;
 import com.jpmc.midascore.repository.UserRepository;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
 
 @Component
 public class DatabaseConduit {
-
     private final UserRepository userRepository;
-    private final TransactionRepository transactionRepository;
+    private final TransactionRecordRepository transactionRecordRepository;
 
-    public DatabaseConduit(UserRepository userRepository, TransactionRepository transactionRepository) {
+    public DatabaseConduit(UserRepository userRepository, TransactionRecordRepository transactionRecordRepository) {
         this.userRepository = userRepository;
-        this.transactionRepository = transactionRepository;
-    }
-
-    @Transactional
-    public void processTransaction(String senderId, String recipientId, BigDecimal amount) {
-        try {
-            // Find sender and recipient by numeric ID
-            UserRecord sender = userRepository.findById(Long.parseLong(senderId));
-            UserRecord recipient = userRepository.findById(Long.parseLong(recipientId));
-
-            if (sender == null || recipient == null) {
-                System.out.println("❌ Invalid sender or recipient — discarding transaction");
-                return;
-            }
-
-            if (sender.getBalance() < amount.floatValue()) {
-                System.out.println("❌ Insufficient funds — discarding transaction");
-                return;
-            }
-
-            // Update balances
-            sender.setBalance(sender.getBalance() - amount.floatValue());
-            recipient.setBalance(recipient.getBalance() + amount.floatValue());
-
-            userRepository.save(sender);
-            userRepository.save(recipient);
-            transactionRepository.save(new TransactionRecord(sender, recipient, amount));
-
-            System.out.println("✅ Transaction recorded successfully");
-
-        } catch (Exception e) {
-            System.out.println("⚠️ Transaction processing failed: " + e.getMessage());
-        }
+        this.transactionRecordRepository = transactionRecordRepository;
     }
 
     public void save(UserRecord userRecord) {
         userRepository.save(userRecord);
     }
 
-    // Print Waldorf’s current balance
-    public void printWaldorfBalance() {
-        userRepository.findAll().forEach(user -> {
-            if (user.getName().equalsIgnoreCase("waldorf")) {
-                System.out.println("🎯 Waldorf current balance: " + Math.floor(user.getBalance()));
-            }
-        });
+    public void save(Transaction transaction) {
+        // assumes isValid has already been called on transaction
+
+        // record transaction
+        UserRecord sender = queryUser(transaction.getSenderId());
+        UserRecord recipient = queryUser(transaction.getRecipientId());
+        TransactionRecord transactionRecord = new TransactionRecord(sender, recipient, transaction.getAmount(), transaction.getIncentive());
+        transactionRecordRepository.save(transactionRecord);
+
+        // update user balances
+        sender.setBalance(sender.getBalance() - transaction.getAmount());
+        save(sender);
+        recipient.setBalance(recipient.getBalance() + transaction.getAmount() + transaction.getIncentive());
+        save(recipient);
+    }
+
+    public boolean isValid(Transaction transaction) {
+        UserRecord sender = queryUser(transaction.getSenderId());
+        if (sender == null) {
+            return false;
+        }
+        UserRecord recipient = queryUser(transaction.getRecipientId());
+        if (recipient == null) {
+            return false;
+        }
+        if (sender.getBalance() < transaction.getAmount()) {
+            return false;
+        }
+        return true;
+    }
+
+    public UserRecord queryUser(Long userId) {
+        return userRepository.findById(userId).orElse(null);
+    }
+
+    public float queryUserBalance(Long userId) {
+        UserRecord userRecord = queryUser(userId);
+        if (userRecord == null) {
+            return 0;
+        } else {
+            return userRecord.getBalance();
+        }
     }
 }

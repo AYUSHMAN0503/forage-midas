@@ -1,33 +1,37 @@
 package com.jpmc.midascore.foundation;
 
-public class Transaction {
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-    private String senderId;
-    private String recipientId;
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class Transaction {
+    private long senderId;
+    private long recipientId;
     private float amount;
+    private float incentive;
 
     public Transaction() {
     }
 
-    public Transaction(String senderId, String recipientId, float amount) {
+    public Transaction(long senderId, long recipientId, float amount) {
         this.senderId = senderId;
         this.recipientId = recipientId;
         this.amount = amount;
+        this.incentive = 0;
     }
 
-    public String getSenderId() {
+    public long getSenderId() {
         return senderId;
     }
 
-    public void setSenderId(String senderId) {
+    public void setSenderId(long senderId) {
         this.senderId = senderId;
     }
 
-    public String getRecipientId() {
+    public long getRecipientId() {
         return recipientId;
     }
 
-    public void setRecipientId(String recipientId) {
+    public void setRecipientId(long recipientId) {
         this.recipientId = recipientId;
     }
 
@@ -39,12 +43,17 @@ public class Transaction {
         this.amount = amount;
     }
 
+    public float getIncentive() {
+        return incentive;
+    }
+
+    public void setIncentive(float incentive) {
+        this.incentive = incentive;
+    }
+
     @Override
     public String toString() {
-        return "Transaction{" +
-                "senderId='" + senderId + '\'' +
-                ", recipientId='" + recipientId + '\'' +
-                ", amount=" + amount +
-                '}';
+        return "Transaction {senderId=" + senderId + ", recipientId=" + recipientId + ", amount=" + amount +
+                ", incentive=" + incentive + "}";
     }
 }

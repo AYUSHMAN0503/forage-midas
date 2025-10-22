@@ -40,7 +40,7 @@ public class BalancePrinter {
                     .findFirst();
 
             if (waldorfOpt.isPresent()) {
-                float balance = waldorfOpt.get().getBalance();
+                float balance = (float) waldorfOpt.get().getBalance();
                 long floored = (long) Math.floor(balance);
                 System.out.println("---------------------------------------------------------");
                 System.out.println("💰 WALDORF BALANCE (float): " + balance);

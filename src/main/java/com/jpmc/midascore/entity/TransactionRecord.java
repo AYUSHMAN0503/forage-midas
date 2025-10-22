@@ -1,32 +1,34 @@
 package com.jpmc.midascore.entity;
 
 import jakarta.persistence.*;
-import java.math.BigDecimal;
 
 @Entity
 public class TransactionRecord {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue()
+    private long id;
 
     @ManyToOne
-    @JoinColumn(name = "sender_id", nullable = false)
     private UserRecord sender;
 
     @ManyToOne
-    @JoinColumn(name = "recipient_id", nullable = false)
     private UserRecord recipient;
 
     @Column(nullable = false)
-    private BigDecimal amount;
+    private float amount;
 
-    protected TransactionRecord() {}
+    @Column(nullable = false)
+    private float incentive;
 
-    public TransactionRecord(UserRecord sender, UserRecord recipient, BigDecimal amount) {
+    protected TransactionRecord() {
+    }
+
+    public TransactionRecord(UserRecord sender, UserRecord recipient, float amount, float incentive) {
         this.sender = sender;
         this.recipient = recipient;
         this.amount = amount;
+        this.incentive = incentive;
     }
 
     public Long getId() {
@@ -41,7 +43,17 @@ public class TransactionRecord {
         return recipient;
     }
 
-    public BigDecimal getAmount() {
+    public float getAmount() {
         return amount;
+    }
+
+    public float getIncentive() {
+        return incentive;
+    }
+
+    @Override
+    public String toString() {
+        return "TransactionRecord {sender=" + sender.toString() + ", recipient=" + recipient.toString() + ", amount=" + amount +
+                ", incentive=" + incentive + "}";
     }
 }
